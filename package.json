@@ -1,0 +1,18 @@
+{
+  "name": "crypto-challenges",
+  "version": "0.0.1",
+  "description": "my attempts at solving the crypto challenges",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "author": "Justin Kovalchuk",
+  "license": "ISC",
+  "dependencies": {
+    "coffee-script": "^1.8.0"
+  },
+  "devDependencies": {
+    "mocha": "^1.21.5",
+    "expect.js": "^0.3.1"
+  }
+}
