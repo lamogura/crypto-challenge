@@ -3,6 +3,7 @@ inspect        = require('util').inspect
 fs             = require 'fs'
 CryptoData     = require '../cryptodata'
 StringAnalysis = require '../stringanalysis'
+_ = require 'underscore'
 
 describe 'CryptoData', ->
   describe 'creating', ->
@@ -36,7 +37,7 @@ describe 'CryptoData', ->
       expect(result.decodeKey).to.be 'X'
 
   describe 'challenge#4', ->
-    it 'can find the encrypted string in file of many encrypted looking strings', ->
+    it.only 'can find the encrypted string in file of many encrypted looking strings', ->
       fs.readFile 'data/s1c4.txt', 'utf8', (err, data) ->
         return console.log err if err
         decoded = []
@@ -52,6 +53,33 @@ describe 'CryptoData', ->
 
         # console.log inspect bestDecoded
         expect(bestDecoded.decodedString).to.be "Now that the party is jumping\n"
+
+  describe 'challenge#6', ->
+    it 'can calculate hamming distance correctly', ->
+      a = new CryptoData string: "this is a test"
+      b = new CryptoData string: "wokka wokka!!!"
+      distance = a.hammingDistance(b)
+      expect(distance).to.be 37
+
+    it 'can break repeating key XOR', ->
+      fs.readFile 'data/s1c6.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        a = new CryptoData base64: data
+        keysize = a.findKeysize()
+        console.log "keysize: #{keysize}"
+
+        blocks = CryptoData.splitBuffer(a.buffer, keysize)
+        zipped = (new Buffer(block) for block in _.zip.apply(_, blocks))
+        
+        key = ""
+        for block in zipped
+          b = new CryptoData buffer: block
+          result = b.singleBitXORDecode()
+          key += result.decodeKey
+
+        a.xorWith string: key
+        console.log "key: " + key
+        console.log a.toString('string')[0..50]
 
 
 
