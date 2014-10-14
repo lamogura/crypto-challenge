@@ -9,7 +9,8 @@
   "author": "Justin Kovalchuk",
   "license": "ISC",
   "dependencies": {
-    "coffee-script": "^1.8.0"
+    "coffee-script": "^1.8.0",
+    "underscore": "~1.7.0"
   },
   "devDependencies": {
     "mocha": "^1.21.5",

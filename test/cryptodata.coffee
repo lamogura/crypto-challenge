@@ -1,6 +1,6 @@
 expect         = require 'expect.js'
 inspect        = require('util').inspect
-
+fs             = require 'fs'
 CryptoData     = require '../cryptodata'
 StringAnalysis = require '../stringanalysis'
 
@@ -13,33 +13,42 @@ describe 'CryptoData', ->
   describe 'xorWith', ->
     it 'should be able to xor with another hex string', ->
       a = new CryptoData hex: '1c0111001f010100061a024b53535009181c'
-      a.xorWith hex: '686974207468652062756c6c277320657965'
-      expect(a.toString('hex')).to.be '746865206b696420646f6e277420706c6179'
+      b = a.xorWith hex: '686974207468652062756c6c277320657965'
+      expect(b.toString('hex')).to.be '746865206b696420646f6e277420706c6179'
 
     it 'should be able to xor with a character', ->
       a = new CryptoData hex:'1c0111001f010100061a024b53535009181c'
       b = new CryptoData hex:'1c0111001f010100061a024b53535009181c'
-      a.xorWith(string: 'a')
-      b.xorWith(hex: '61')
-      expect(a.toString('hex')).to.be b.toString('hex')
+      a2 = a.xorWith(string: 'a')
+      b2 = b.xorWith(hex: '61')
+      expect(a2.toString('hex')).to.be b2.toString('hex')
 
     it 'can solve a xor single byte encryption (challenge#3)', ->
-      candidates = []
-      for i in ['1'.charCodeAt(0)..'z'.charCodeAt(0)]
-        a = new CryptoData hex:'1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
-        a.xorWith(string: String.fromCharCode(i))
-        decoded = a.toString('string')
-        candidates.push {
-          decodeKey: String.fromCharCode(i)
-          decodedString: decoded
-          score: (new StringAnalysis(decoded)).englishScore
-        }
+      a = new CryptoData hex:'1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
+      result = a.singleBitXORDecode()
+      expect(result.decodeKey).to.be 'X'
 
-      bestCandidate = {score: 0}
-      for candidate in candidates
-        # console.log "'#{candidate.decodeKey}' -> '#{candidate.decodedString}'"
-        if candidate.score > bestCandidate.score
-          bestCandidate = candidate
+    it 'can find the encrypted string in challenge#4', ->
+      fs.readFile 'data/s1c4.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        decoded = []
+        for line in data.split('\n')
+          a = new CryptoData hex: line
+          result = a.singleBitXORDecode()
+          decoded.push result
 
-      # console.log "\nusing key '#{bestCandidate.decodeKey}', best guess is: \n " + bestCandidate.decodedString
-      expect(bestCandidate.decodeKey).to.be 'X'
+        bestDecoded = {score: 0}
+        for attempt in decoded
+          if attempt.score > bestDecoded.score
+            bestDecoded = attempt
+
+        # console.log inspect bestDecoded
+        expect(bestDecoded.decodedString).to.be "Now that the party is jumping\n"
+
+
+
+
+
+
+
+
