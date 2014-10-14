@@ -1,12 +1,8 @@
-CryptoData = require '../CryptoData'
-expect     = require 'expect.js'
-inspect = require('util').inspect
+expect         = require 'expect.js'
+inspect        = require('util').inspect
 
-class StringAnalysis
-  constructor: (string) ->
-    @englishScore = 0
-    @englishScore++ for char in string when "1".charCodeAt(0) <= char.charCodeAt(0) <= "z".charCodeAt(0)
-    @englishScore += (string.match(/\s/g) || []).length
+CryptoData     = require '../cryptodata'
+StringAnalysis = require '../stringanalysis'
 
 describe 'CryptoData', ->
   describe 'creating', ->
@@ -27,12 +23,12 @@ describe 'CryptoData', ->
       b.xorWith(hex: '61')
       expect(a.toString('hex')).to.be b.toString('hex')
 
-    it.only 'can solve a xor single byte encryption (challenge#3)', ->
+    it 'can solve a xor single byte encryption (challenge#3)', ->
       candidates = []
       for i in ['1'.charCodeAt(0)..'z'.charCodeAt(0)]
-        mat = new CryptoData hex:'1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
-        mat.xorWith(string: String.fromCharCode(i))
-        decoded = mat.toString('string')
+        a = new CryptoData hex:'1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
+        a.xorWith(string: String.fromCharCode(i))
+        decoded = a.toString('string')
         candidates.push {
           decodeKey: String.fromCharCode(i)
           decodedString: decoded
@@ -41,7 +37,9 @@ describe 'CryptoData', ->
 
       bestCandidate = {score: 0}
       for candidate in candidates
+        # console.log "'#{candidate.decodeKey}' -> '#{candidate.decodedString}'"
         if candidate.score > bestCandidate.score
           bestCandidate = candidate
-      console.log "best guess is using key: " + bestCandidate.decodeKey
-      console.log "best guess is: " + bestCandidate.decodedString
+
+      # console.log "\nusing key '#{bestCandidate.decodeKey}', best guess is: \n " + bestCandidate.decodedString
+      expect(bestCandidate.decodeKey).to.be 'X'
