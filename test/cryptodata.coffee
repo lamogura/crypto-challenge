@@ -1,5 +1,6 @@
 expect         = require 'expect.js'
 inspect        = require('util').inspect
+crypto         = require 'crypto'
 fs             = require 'fs'
 _              = require 'underscore'
 
@@ -94,4 +95,13 @@ describe 'CryptoData', ->
 
         expect(key).to.be "Terminator X: Bring the noise"
         # decoded = a.xorWith string: key
+        done()
+
+  describe 'challenge#7', ->
+    it.only "can decrtype AES-ECB mode given the key", (done) ->
+      fs.readFile 'data/s1c7.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        cipher = crypto.createDecipheriv('aes-128-ecb', 'YELLOW SUBMARINE', new Buffer(0))
+        decodedString = cipher.update(data, 'base64', 'utf8') + cipher.final('utf8')
+        expect(decodedString.match(/freaks/g).length).to.be 1
         done()
