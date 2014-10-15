@@ -5,8 +5,7 @@ class StringAnalysisException
   constructor: (@message) -> @name = "StringAnalysisException"
 
 class StringAnalysis
-  frequencies: { ' ': 13.00, a: 8.17, b: 1.49, c: 2.78, d: 4.25, e: 12.70, f: 2.23, g: 2.02, h: 6.09, i: 6.97, j: 0.15, k: 0.77, l: 4.03, m: 2.41, n: 6.75, o: 7.51, p: 1.93, q: 0.10, r: 5.99, s: 6.33, t: 9.06, u: 2.76, v: 0.98, w: 2.36, x: 0.15, y: 1.97, z: 0.07
-  }
+  frequencies: { a: 8.17, b: 1.49, c: 2.78, d: 4.25, e: 12.70, f: 2.23, g: 2.02, h: 6.09, i: 6.97, j: 0.15, k: 0.77, l: 4.03, m: 2.41, n: 6.75, o: 7.51, p: 1.93, q: 0.10, r: 5.99, s: 6.33, t: 9.06, u: 2.76, v: 0.98, w: 2.36, x: 0.15, y: 1.97, z: 0.07, '\u0000': 0.0, ' ': 13.00 }
 
   constructor: (@baseString) ->
     countsHistogram = {}
@@ -20,17 +19,12 @@ class StringAnalysis
       normalizedHistogram[char] = 100 * count / baseStringLength
 
     deltaSum = 0
-    for char, f of @frequencies
+    for char, freq of @frequencies
       [expected, measured] = [@frequencies[char] || 0, normalizedHistogram[char] || 0]
       # console.log "'#{char}': measured: #{measured}, expected: #{expected}"
       deltaSum += Math.pow(expected-measured, 2)
 
-    # saneCharCount = (@baseString.match(/[\w\r\n"?,.]/g) || []).length
-    # # console.log "sane: #{saneCharCount}, length: #{baseStringLength}"
-    # penalty = Math.max(0.65 * baseStringLength / saneCharCount, 1.0)
-
     rss = Math.sqrt(deltaSum)
-    # console.log "rss: #{rss}, penalty: #{penalty}"
     @englishDeviationScore =  rss
 
 module.exports = StringAnalysis

@@ -1,12 +1,15 @@
 expect         = require 'expect.js'
 inspect        = require('util').inspect
 fs             = require 'fs'
+_              = require 'underscore'
+
 CryptoData     = require '../cryptodata'
 CryptoUtils    = require '../cryptoutils'
 StringAnalysis = require '../stringanalysis'
-_ = require 'underscore'
 
 describe 'CryptoData', ->
+  @timeout(0) # decrypting can take time
+
   describe 'creating', ->
     it 'should create object from a given hex string (challenge#1)', ->
       a = new CryptoData hex:'49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d'
@@ -44,6 +47,7 @@ describe 'CryptoData', ->
         decoded = []
         for line in data.split('\r\n')
           a = new CryptoData hex: line
+          # console.log line
           result = a.singleBitXORDecode()
           decoded.push result
 
@@ -87,9 +91,7 @@ describe 'CryptoData', ->
           result = b.singleBitXORDecode()
           # console.log inspect result
           key += result.decodeKey
-          # break
 
-        decoded = a.xorWith string: key
-        console.log "\nkey: " + key
-        console.log decoded.toString('string')[0..100]
+        expect(key).to.be "Terminator X: Bring the noise"
+        # decoded = a.xorWith string: key
         done()

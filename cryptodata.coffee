@@ -1,7 +1,8 @@
+inspect        = require('util').inspect
 _              = require 'underscore'
+
 StringAnalysis = require './stringanalysis'
 CryptoUtils    = require './cryptoutils'
-inspect        = require('util').inspect
 
 class CryptoData
   constructor: (data) -> @buffer = CryptoUtils.bufferFromData(data)
@@ -25,8 +26,7 @@ class CryptoData
     else if format.toLowerCase() is 'base64' then return @buffer.toString('base64')
     else if format.toLowerCase() is 'string' then (String.fromCharCode(code) for code in @buffer).join('')
 
-  singleBitXORDecode: ->
-    [start, finish] = ['1'.charCodeAt(0), 'z'.charCodeAt(0)] 
+  singleBitXORDecode: (start=0, finish=250) ->
     candidates = []
     for i in [start..finish]
       xorResult = @xorWith(string: String.fromCharCode(i))
@@ -39,6 +39,7 @@ class CryptoData
 
     bestCandidate = {score: 100000}
     for candidate in candidates
+      # console.log inspect candidate if candidate.decodeKey.toLowerCase() is 'm'
       # console.log "'#{candidate.decodeKey}' -> '#{candidate.decodedString}'"
       bestCandidate = candidate if candidate.score < bestCandidate.score
 
