@@ -1,37 +1,30 @@
 inspect = require('util').inspect
-_ = require 'underscore'
+_       = require 'underscore'
 
 class StringAnalysisException
   constructor: (@message) -> @name = "StringAnalysisException"
 
 class StringAnalysis
+  frequencies: { ' ': 13.00, a: 8.17, b: 1.49, c: 2.78, d: 4.25, e: 12.70, f: 2.23, g: 2.02, h: 6.09, i: 6.97, j: 0.15, k: 0.77, l: 4.03, m: 2.41, n: 6.75, o: 7.51, p: 1.93, q: 0.10, r: 5.99, s: 6.33, t: 9.06, u: 2.76, v: 0.98, w: 2.36, x: 0.15, y: 1.97, z: 0.07
+  }
+
   constructor: (@baseString) ->
-    # histogram = {}
-    # for char in @baseString
-    #   c = char.toLowerCase()
-    #   if _.has(histogram, c)
-    #     histogram[c]++
-    #   else
-    #     histogram[c] = 0
+    countsHistogram = {}
+    for char in @baseString
+      c = char.toLowerCase()
+      countsHistogram[c] = (countsHistogram[c] + 1) || 1
 
-    # sorted = _.sortBy _.pairs(histogram), (item) -> -item[1]
-    # topTen = (item[0] for item in sorted[0...8]).join('')
-    # # console.log topTen
-    
-    # freqScore = 0
-    # freqOrder = "etaoinshrdlu"
-    # for i in [0...freqOrder.length]
-    #   letter = freqOrder[i]
-    #   idx = topTen.indexOf(letter)
-    #   if idx > -1
-    #     freqScore += (2 - i - idx)
-    matchCount = (@baseString.match(/[etaoinshrdlu]/g) || []).length
-    @englishScore = Math.ceil(matchCount / @baseString.length)
+    normalizedHistogram = {}
+    length = @baseString.length
+    for char, count of countsHistogram
+      normalizedHistogram[char] = 100 * count / length
 
-  @hammingDistance: (a, b) ->
-    throw new StringAnalysisEuxception("a and b string lengths differe!") if a.length isnt b.length
-    count = 0
-    count++ for i in [0...a.length] when a[i] isnt b[i]
-    return count
+    deltaSum = 0
+    for char in " etaoinshrdlu"
+      [expected, measured] = [@frequencies[char] || 0, normalizedHistogram[char] || 0]
+      # console.log "'#{char}': measured: #{measured}, expected: #{expected}"
+      deltaSum += Math.pow(expected-measured, 2)
+
+    @englishDeviationScore = Math.sqrt(deltaSum) # rss
 
 module.exports = StringAnalysis
