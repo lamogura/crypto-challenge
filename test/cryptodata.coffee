@@ -130,4 +130,15 @@ describe 'CryptoData', ->
       a = new Buffer('YELLOW SUBMARINE')
       b = CryptoUtils.padBuffer(a, 20)
       expect(b.length).to.be 20
-      expect(b[b.length-1]).to.be 4
+      expect(b[b.length-1]).to.be 0
+
+  describe 'challenge#10', ->
+    it "can do decrypt CDC encrypt correctly", (done) ->
+      fs.readFile 'data/10.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        cipher = crypto.createDecipheriv('aes-128-cbc', 'YELLOW SUBMARINE', CryptoUtils.padBuffer(new Buffer(0), 16))
+        decodedString = cipher.update(data, 'base64', 'utf8') + cipher.final('utf8')
+        expect(decodedString.match(/freaks/g).length).to.be 1
+        done()
+
+    it "can do CDC encrypt manually"

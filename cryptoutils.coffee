@@ -4,7 +4,7 @@ class CryptoException
 module.exports = 
   CryptoException: CryptoException
 
-  padBuffer: (buffer, blockLength=20, padWith='\x04') ->
+  padBuffer: (buffer, blockLength=20, padWith='\x00') ->
     if buffer.length >= blockLength then throw new CryptoException("Buffer is already >= block length of #{blockLength}")
     while buffer.length < blockLength
       buffer = Buffer.concat([buffer, new Buffer(padWith)]) 
