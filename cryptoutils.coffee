@@ -1,3 +1,5 @@
+inspect = require('util').inspect
+
 class CryptoException
   constructor: (@message) -> @name = "CryptoException"
 
@@ -10,13 +12,20 @@ module.exports =
       buffer = Buffer.concat([buffer, new Buffer(padWith)]) 
     return buffer
 
-  partitionBuffer: (buffer, paritionSize, take=null) ->
+  partitionBuffer: (buffer, paritionSize, doPad=false, take=null) ->
     partitions = []
     maxPartitionCount = Math.floor(buffer.length / paritionSize)
-    take = if take? then Math.min(take, maxPartitionCount) else maxPartitionCount
+    takeCount = if take? then Math.min(take, maxPartitionCount) else maxPartitionCount
     
-    for i in [0...take]
+    for i in [0...takeCount]
       partitions.push buffer[i*paritionSize...(i+1)*paritionSize]
+
+    remainder = buffer.length % paritionSize
+    if not take? and remainder isnt 0
+      lastBuff = buffer.slice(buffer.length-remainder)
+      lastBuff = @padBuffer(lastBuff, paritionSize) if doPad
+      partitions.push lastBuff
+
     return partitions
 
   hammingDistance: (buffer1, buffer2) ->
@@ -24,8 +33,8 @@ module.exports =
     throw new CryptoException("a and b data lengths differ!") if buffer1.length isnt buffer2.length
     count = 0
     for i in [0...buffer1.length]
-      binaryXOR = 
-      count += ((buffer1[i] ^ buffer2[i]).toString(2).match(/1/g) || []).length
+      binaryXOR = buffer1[i] ^ buffer2[i]
+      count += (binaryXOR.toString(2).match(/1/g) || []).length
     return count
 
   bufferFromData: (data) ->

@@ -84,6 +84,7 @@ describe 'CryptoData', ->
         # console.log "keysize: #{keysize}"
 
         blocks = CryptoUtils.partitionBuffer(a.buffer, keysize)
+        blocks = blocks[0...blocks.length-1] # chop off last one in case it is incomplete cause it fucks with the results
         transposed = (new Buffer(block) for block in _.zip.apply(_, blocks))
 
         key = ""
@@ -141,4 +142,24 @@ describe 'CryptoData', ->
         expect(decodedString.match(/freaks/g).length).to.be 1
         done()
 
-    it "can do CDC encrypt manually"
+    it.only "can do CDC encrypt manually", ->
+      plaintext = "something only i can do but that isnt really true,no really really anyone can do it now"
+
+      iv = CryptoUtils.padBuffer(new Buffer(0), 16)
+      b = new CryptoData string: plaintext
+
+      blocks = CryptoUtils.partitionBuffer(b.buffer, 16, true)
+
+      encryptedBlocks = []
+      for block, i in blocks
+        cipher = crypto.createCipheriv('aes-128-ecb', 'YELLOW SUBMARINE', new Buffer(0))
+        c = new CryptoData buffer: block
+        xorBuff = c.xorWith(buffer: iv).buffer
+        console.log i
+        eblock = Buffer.concat [cipher.update(xorBuff), cipher.final()]
+        encryptedBlocks.push eblock
+        iv = eblock
+
+      console.log encryptedBlocks[0..2]
+
+      # console.log CryptoUtils.partitionBuffer(b, 16)

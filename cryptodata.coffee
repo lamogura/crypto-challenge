@@ -11,7 +11,7 @@ class CryptoData
     bestResult = {distance: 100000}
     for keysize in [min..max]
       take = 15
-      blocks = CryptoUtils.partitionBuffer(@buffer, keysize, take)
+      blocks = CryptoUtils.partitionBuffer(@buffer, keysize, false, take)
       sum = 0
       for block in blocks[1...blocks.length]
         sum += CryptoUtils.hammingDistance(blocks[0], block) / keysize / 8
