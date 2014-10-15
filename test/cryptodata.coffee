@@ -98,10 +98,19 @@ describe 'CryptoData', ->
         done()
 
   describe 'challenge#7', ->
-    it.only "can decrtype AES-ECB mode given the key", (done) ->
+    it "can decrypt AES-ECB-128 given the key", (done) ->
       fs.readFile 'data/s1c7.txt', 'utf8', (err, data) ->
         return console.log err if err
         cipher = crypto.createDecipheriv('aes-128-ecb', 'YELLOW SUBMARINE', new Buffer(0))
         decodedString = cipher.update(data, 'base64', 'utf8') + cipher.final('utf8')
         expect(decodedString.match(/freaks/g).length).to.be 1
+        done()
+
+  describe 'challenge#8', ->
+    it.only "can detect an AES-ECB encrypted ciphertext", (done) ->
+      fs.readFile 'data/s1c8.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        for line in data.split('\n')
+          console.log line
+          break
         done()
