@@ -9,11 +9,13 @@ class CryptoData
   findKeysize: (min=2, max=40) ->
     bestResult = {distance: 100000}
     for keysize in [min..max]
-      [block1, block2, block3, block4] = CryptoUtils.partitionBuffer(@buffer, keysize, 4)
-      distance1 = CryptoUtils.hammingDistance(block1, block2) / keysize
-      distance2 = CryptoUtils.hammingDistance(block1, block3) / keysize
-      distance3 = CryptoUtils.hammingDistance(block1, block4) / keysize
-      distance = (distance1 + distance2 + distance3) / 3
+      take = 15
+      blocks = CryptoUtils.partitionBuffer(@buffer, keysize, take)
+      sum = 0
+      for block in blocks[1...blocks.length]
+        sum += CryptoUtils.hammingDistance(blocks[0], block) / keysize / 8
+      distance = sum / take
+      # console.log "keysize: #{keysize}, distance: #{distance}"
       if distance < bestResult.distance
         bestResult = { keysize: keysize, distance: distance }
     return bestResult.keysize

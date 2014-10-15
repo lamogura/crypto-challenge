@@ -15,16 +15,22 @@ class StringAnalysis
       countsHistogram[c] = (countsHistogram[c] + 1) || 1
 
     normalizedHistogram = {}
-    length = @baseString.length
+    baseStringLength = @baseString.length
     for char, count of countsHistogram
-      normalizedHistogram[char] = 100 * count / length
+      normalizedHistogram[char] = 100 * count / baseStringLength
 
     deltaSum = 0
-    for char in " etaoinshrdlu"
+    for char, f of @frequencies
       [expected, measured] = [@frequencies[char] || 0, normalizedHistogram[char] || 0]
       # console.log "'#{char}': measured: #{measured}, expected: #{expected}"
       deltaSum += Math.pow(expected-measured, 2)
 
-    @englishDeviationScore = Math.sqrt(deltaSum) # rss
+    # saneCharCount = (@baseString.match(/[\w\r\n"?,.]/g) || []).length
+    # # console.log "sane: #{saneCharCount}, length: #{baseStringLength}"
+    # penalty = Math.max(0.65 * baseStringLength / saneCharCount, 1.0)
+
+    rss = Math.sqrt(deltaSum)
+    # console.log "rss: #{rss}, penalty: #{penalty}"
+    @englishDeviationScore =  rss
 
 module.exports = StringAnalysis
