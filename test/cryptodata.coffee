@@ -107,10 +107,20 @@ describe 'CryptoData', ->
         done()
 
   describe 'challenge#8', ->
-    it.only "can detect an AES-ECB encrypted ciphertext", (done) ->
+    it "can detect an AES-ECB encrypted ciphertext", (done) ->
       fs.readFile 'data/s1c8.txt', 'utf8', (err, data) ->
         return console.log err if err
-        for line in data.split('\n')
-          console.log line
-          break
+
+        bestResult = {count: 0}
+        for line, i in data.split('\n')
+          blocks = CryptoUtils.partitionBuffer(new Buffer(line, 'base64'), 4)
+          counts = {}
+          for b in blocks
+            hex = b.toString('hex')
+            counts[hex] = (counts[hex] + 1) || 1
+
+          for key, count of counts
+            if count > bestResult.count
+              bestResult = { count: count, line: line, hex: key, lineNumber: i+1 }
+        expect(bestResult.lineNumber).to.be 133
         done()

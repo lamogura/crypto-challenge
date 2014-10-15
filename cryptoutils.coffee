@@ -28,3 +28,9 @@ module.exports =
     else if data.base64? then return new Buffer(data.base64, 'base64')
     else if data.string? then return new Buffer(char.charCodeAt(0) for char in data.string)
     else throw new CryptoException('Unsupported or no data passed: ' + inspect(data))
+
+  buffersAreEqual: (a, b) ->
+    return false if a.length isnt b.length
+    for i in [0...a.length]
+      return false if a[i] isnt b[i]
+    return true
