@@ -124,3 +124,10 @@ describe 'CryptoData', ->
               bestResult = { count: count, line: line, hex: key, lineNumber: i+1 }
         expect(bestResult.lineNumber).to.be 133
         done()
+
+  describe 'challenge#9', ->
+    it "can pad a buffer", ->
+      a = new Buffer('YELLOW SUBMARINE')
+      b = CryptoUtils.padBuffer(a, 20)
+      expect(b.length).to.be 20
+      expect(b[b.length-1]).to.be 4
