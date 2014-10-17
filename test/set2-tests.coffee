@@ -9,6 +9,9 @@ _              = require 'underscore'
 # local
 CryptoTools    = require '../cryptotools'
 
+log  = (msg) -> console.log msg
+logi = (obj) -> console.log inspect obj
+
 describe 'Matasano Challenge Set#2', ->
   @timeout(0) # decrypting can take time
 
@@ -21,30 +24,40 @@ describe 'Matasano Challenge Set#2', ->
   describe 'challenge#10', ->
     it "can do decrypt CDC encrypt correctly", (done) ->
       fs.readFile 'data/10.txt', 'utf8', (err, data) ->
-        return console.log err if err
+        return log err if err
         cipher = crypto.createDecipheriv('aes-128-cbc', 'YELLOW SUBMARINE', (new Buffer(0)).pad(16))
         decodedString = cipher.update(data, 'base64', 'utf8') + cipher.final('utf8')
         expect(decodedString.match(/freaks/g).length).to.be 1
         done()
 
-    it.skip "can do CDC encrypt manually", ->
-      plaintext = "something only i can do but that isnt really true,no really really anyone can do it now"
+    it.only "can do CDC encrypt manually", ->
+      plaintext = "egg sandwhich nope nasdf efafess"
+      key = 'YELLOW SUBMARINE'
+      pBuffer = new Buffer(plaintext)
+      iv = (new Buffer(0)).pad(16)
 
-      iv = CryptoTools.padBuffer(new Buffer(0), 16)
-      b = new CryptoData string: plaintext
+      blocks = pBuffer.partition(16)
+      log "original blocks"
+      log blocks
 
-      blocks = CryptoTools.partitionBuffer(b.buffer, 16, true)
+      cipher = crypto.createCipheriv('aes-128-cbc', key, iv)
+      cBuffer = Buffer.concat [cipher.update(pBuffer), cipher.final()]
+      log "expected encrypt result, length: " + cBuffer.length
+      log cBuffer.slice(30)
 
       encryptedBlocks = []
+      cipher = crypto.createCipheriv('aes-128-ecb', key, new Buffer(0))
       for block, i in blocks
-        cipher = crypto.createCipheriv('aes-128-ecb', 'YELLOW SUBMARINE', new Buffer(0))
-        c = new CryptoData buffer: block
-        xorBuff = c.xorWith(buffer: iv).buffer
-        console.log i
-        eblock = Buffer.concat [cipher.update(xorBuff), cipher.final()]
-        encryptedBlocks.push eblock
-        iv = eblock
+        xorResult = block.xorWith(iv)
+        iv = cipher.update(xorResult)
+        # iv = Buffer.concat [cipher.update(xorResult), cipher.final()]
+        encryptedBlocks.push iv
+      encryptedBlocks.push cipher.final()
 
-      console.log encryptedBlocks[0..2]
+      myEncrypt = Buffer.concat encryptedBlocks
+      log "my result, length: " + cBuffer.length
+      log myEncrypt.slice(30)
 
-      # console.log CryptoTools.partitionBuffer(b, 16)
+      # cipher = crypto.createDecipheriv('aes-128-cbc', key, (new Buffer(0)).pad(16))
+      # log "them decrypting me"
+      # log (Buffer.concat [cipher.update(myEncrypt), cipher.final()]).toString('utf8')

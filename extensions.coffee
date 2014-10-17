@@ -28,7 +28,7 @@ Buffer.prototype.partition = (partitionLength, doPadLast=false, takeCount=null) 
   shouldAddLastBlock = (takeCount is null) or (takeCount > maxFullBlocks)
   if remainder > 0 and shouldAddLastBlock 
     lastBuff = @slice(@length-remainder)
-    lastBuff = @padBuffer(lastBuff, partitionLength) if doPadLast
+    lastBuff = lastBuff.pad(partitionLength) if doPadLast
     partitions.push lastBuff
   return partitions
 
