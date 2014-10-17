@@ -17,7 +17,7 @@ Buffer.prototype.hammingDistanceWith = (otherBuffer) ->
   binaryString += parseInt(byte).toString(2) for byte in xorResult
   return (binaryString.match(/1/g) || []).length
 
-Buffer.prototype.partition = (partitionLength, doPadLast=false, takeCount=null) ->
+Buffer.prototype.partition = (partitionLength, doPkcs7Pad=false, takeCount=null) ->
   maxFullBlocks = Math.floor(@length / partitionLength)
   take = Math.min(takeCount, maxFullBlocks) || maxFullBlocks
   partitions = []
@@ -28,19 +28,19 @@ Buffer.prototype.partition = (partitionLength, doPadLast=false, takeCount=null) 
   shouldAddLastBlock = (takeCount is null) or (takeCount > maxFullBlocks)
   if remainder > 0 and shouldAddLastBlock 
     lastBuff = @slice(@length-remainder)
-    lastBuff = lastBuff.pad(partitionLength) if doPadLast
+    lastBuff = lastBuff.pkcs7(partitionLength) if doPkcs7Pad
     partitions.push lastBuff
   return partitions
 
-Buffer.prototype.pad = (padToLength=20, paddingChar='\x00') ->
+Buffer.prototype.pkcs7 = (padToLength=20) ->
   paddingNeeded = Math.max(padToLength-@length, 0)
-  paddingString = (paddingChar for i in [0...paddingNeeded]).join('')
-  paddedBuffer = Buffer.concat [this, new Buffer(paddingString)]
+  paddingBytes = (paddingNeeded for i in [0...paddingNeeded])
+  paddedBuffer = Buffer.concat [this, new Buffer(paddingBytes)]
   return paddedBuffer
 
 Buffer.prototype.isEqual = (otherBuffer) ->
   return false unless Buffer.isBuffer(otherBuffer)
   return false unless @length is otherBuffer.length
   for i in [0...@length]
-    return false if a[i] isnt b[i]
+    return false if @[i] isnt otherBuffer[i]
   return true
