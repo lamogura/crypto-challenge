@@ -10,6 +10,9 @@ _              = require 'underscore'
 # local
 CryptoTools    = require '../cryptotools'
 
+log  = (msg) -> console.log msg
+logi = (obj) -> console.log inspect obj
+
 describe 'Matasano Challenge Set#1', ->
   @timeout(0) # decrypting can take time
 

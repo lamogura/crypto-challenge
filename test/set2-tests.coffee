@@ -84,3 +84,18 @@ describe 'Matasano Challenge Set#2', ->
         cipher = crypto.createDecipheriv('aes-128-cbc', key, iv)
         openSSLDecrypt = (Buffer.concat [cipher.update(cBuffer), cipher.final()]).toString('utf8')
         expect(openSSLDecrypt).to.be plaintext
+
+  describe.only 'challenge#11', ->
+    describe "Buffer@randomBytes", ->
+      it "can make random bytes of a given length", ->
+        for i in [5..20]
+          rBuff = Buffer.randomBytes(i)
+          expect(rBuff.length).to.be i
+
+    it "can consult the encryption oracle", ->
+      fs.readFile 'data/s1c4.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        pBuffer = new Buffer(data)
+        cBuffer = CryptoTools.encryptionOracle(pBuffer)
+        log cBuffer
+

@@ -63,31 +63,50 @@ CryptoTools =
     return Math.sqrt(deltaSum) # rss
 
   cbcEncrypt: (plaintext, key, iv) ->
-      # pBuffer = Buffer.concat [new Buffer(plaintext), (new Buffer(0)).pkcs7()]
-      pBuffer = new Buffer(plaintext)
-      blocks = pBuffer.partition(16, doPkcs7Pad=true)
-      # log "original blocks"
-      # log blocks
+    # pBuffer = Buffer.concat [new Buffer(plaintext), (new Buffer(0)).pkcs7()]
+    pBuffer = new Buffer(plaintext)
+    blocks = pBuffer.partition(16, doPkcs7Pad=true)
+    # log "original blocks"
+    # log blocks
 
-      # ok had to verify against their algorithm
-      # cipher = crypto.createCipheriv('aes-128-cbc', key, iv)
-      # cBuffer = Buffer.concat [cipher.update(pBuffer), cipher.final()]
-      # log "expected encrypt result, length: " + cBuffer.length
-      # log cBuffer
+    # ok had to verify against their algorithm
+    # cipher = crypto.createCipheriv('aes-128-cbc', key, iv)
+    # cBuffer = Buffer.concat [cipher.update(pBuffer), cipher.final()]
+    # log "expected encrypt result, length: " + cBuffer.length
+    # log cBuffer
 
+    cipher = crypto.createCipheriv('aes-128-ecb', key, new Buffer(0))
+    cipher.setAutoPadding(false)
+
+    encryptedBlocks = []
+    for block in blocks
+      xorResult = block.xorWith(iv)
+      iv = cipher.update(xorResult)
+      encryptedBlocks.push iv
+    encryptedBlocks.push cipher.final()
+
+    myEncrypt = Buffer.concat encryptedBlocks
+    # log "my result, length: " + myEncrypt.length
+    # log myEncrypt
+    return myEncrypt
+
+  encryptionOracle: (data) ->
+    doCBC = Math.random() <= 0.5
+    key = Buffer.randomBytes(16)
+    
+    randomLength1 = 5 + Math.floor(5*Math.random())
+    randomLength2 = 5 + Math.floor(5*Math.random())
+    beforeJunk = Buffer.randomBytes(randomLength1)
+    afterJunk = Buffer.randomBytes(randomLength2)
+    data = Buffer.concat [beforeJunk, data, afterJunk]
+
+    if doCBC
+      iv = Buffer.randomBytes(16)
+      cBuffer = @cbcEncrypt(data, key, iv)
+    else
       cipher = crypto.createCipheriv('aes-128-ecb', key, new Buffer(0))
-      cipher.setAutoPadding(false)
+      cBuffer = Buffer.concat [cipher.update(data), cipher.final()]
 
-      encryptedBlocks = []
-      for block in blocks
-        xorResult = block.xorWith(iv)
-        iv = cipher.update(xorResult)
-        encryptedBlocks.push iv
-      encryptedBlocks.push cipher.final()
-
-      myEncrypt = Buffer.concat encryptedBlocks
-      # log "my result, length: " + myEncrypt.length
-      # log myEncrypt
-      return myEncrypt
+    return cBuffer
 
 module.exports = CryptoTools

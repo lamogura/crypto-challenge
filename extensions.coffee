@@ -40,3 +40,6 @@ Buffer.prototype.partition = (partitionLength, doPkcs7Pad=false, takeCount=null)
     partitions.push theBuffer.slice(i*partitionLength, (i+1)*partitionLength)
 
   return partitions
+
+Buffer.randomBytes = (length=16) ->
+  return new Buffer(Math.floor(255*Math.random()) for i in [0...length])
