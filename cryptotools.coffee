@@ -109,4 +109,22 @@ CryptoTools =
 
     return cBuffer
 
+  detectECBvsCBC: (data) ->
+    mostRepeatedHex = {count: 0}
+    blocks = data.partition(4)
+    byteHistogram = {}
+    for block in blocks
+      hex = block.toString('hex')
+      byteHistogram[hex] = (byteHistogram[hex] + 1) || 1
+
+    for hex, count of byteHistogram
+      if count > mostRepeatedHex.count
+        mostRepeatedHex = { count: count, hex: hex }
+
+    rating = 1000 * mostRepeatedHex.count / data.length
+    # log rating
+    if rating > 0.5
+      return {method: 'ecb'}
+    return {method: 'cbc'}
+
 module.exports = CryptoTools

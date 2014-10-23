@@ -92,10 +92,10 @@ describe 'Matasano Challenge Set#2', ->
           rBuff = Buffer.randomBytes(i)
           expect(rBuff.length).to.be i
 
-    it "can consult the encryption oracle", ->
-      fs.readFile 'data/s1c4.txt', 'utf8', (err, data) ->
+    it "can detect cbc or ecb encryption method", (done) ->
+      fs.readFile 'data/11.txt', 'utf8', (err, data) ->
         return console.log err if err
-        pBuffer = new Buffer(data)
-        cBuffer = CryptoTools.encryptionOracle(pBuffer)
-        log cBuffer
-
+        cBuffer = CryptoTools.encryptionOracle(new Buffer(data))
+        result = CryptoTools.detectECBvsCBC(cBuffer)
+        log result.method
+        done()
