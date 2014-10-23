@@ -17,26 +17,10 @@ Buffer.prototype.hammingDistanceWith = (otherBuffer) ->
   binaryString += parseInt(byte).toString(2) for byte in xorResult
   return (binaryString.match(/1/g) || []).length
 
-Buffer.prototype.partition = (partitionLength, doPkcs7Pad=false, takeCount=null) ->
-  maxFullBlocks = Math.floor(@length / partitionLength)
-  take = Math.min(takeCount, maxFullBlocks) || maxFullBlocks
-  partitions = []
-  for i in [0...take] # take only full blocks
-    partitions.push this[i*partitionLength...(i+1)*partitionLength]
-
-  remainder = @length % partitionLength
-  shouldAddLastBlock = (takeCount is null) or (takeCount > maxFullBlocks)
-  if remainder > 0 and shouldAddLastBlock 
-    lastBuff = @slice(@length-remainder)
-    lastBuff = lastBuff.pkcs7(partitionLength) if doPkcs7Pad
-    partitions.push lastBuff
-  return partitions
-
-Buffer.prototype.pkcs7 = (padToLength=20) ->
-  paddingNeeded = Math.max(padToLength-@length, 0)
-  paddingBytes = (paddingNeeded for i in [0...paddingNeeded])
-  paddedBuffer = Buffer.concat [this, new Buffer(paddingBytes)]
-  return paddedBuffer
+Buffer.prototype.pkcs7 = (padToBlockLength=20) ->
+  padBytesNeeded = padToBlockLength - (@length % padToBlockLength)
+  padBytes = (padBytesNeeded for i in [0...padBytesNeeded])
+  return Buffer.concat [this, new Buffer(padBytes)]
 
 Buffer.prototype.isEqual = (otherBuffer) ->
   return false unless Buffer.isBuffer(otherBuffer)
@@ -44,3 +28,15 @@ Buffer.prototype.isEqual = (otherBuffer) ->
   for i in [0...@length]
     return false if @[i] isnt otherBuffer[i]
   return true
+
+Buffer.prototype.partition = (partitionLength, doPkcs7Pad=false, takeCount=null) ->
+  theBuffer = if doPkcs7Pad then @pkcs7(partitionLength) else this
+  maxPartitions = Math.ceil(theBuffer.length / partitionLength) 
+  takeCount = Math.min(takeCount, maxPartitions) or maxPartitions
+  
+  partitions = []
+  # push all but last one
+  for i in [0...takeCount]
+    partitions.push theBuffer.slice(i*partitionLength, (i+1)*partitionLength)
+
+  return partitions

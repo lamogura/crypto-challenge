@@ -16,18 +16,29 @@ describe 'Matasano Challenge Set#2', ->
   @timeout(0) # decrypting can take time
 
   describe 'challenge#9', ->
-    it "can pad a buffer with pkcs#7", ->
-      buffer = new Buffer('YELLOW SUBMARINE')
-      paddedLength = 20
-      length = buffer.length
-      paddedBuffer = buffer.pkcs7(paddedLength)
-      # check length
-      expect(paddedBuffer.length).to.be paddedLength
+    describe "Buffer#pkcs7", ->
+      it "can handle uneven blocked buffer", ->
+        buffer = new Buffer('YELLOW SUBMARINE')
+        padLength = 20
+        paddedBuffer = buffer.pkcs7(padLength)
+        # check length
+        expect(paddedBuffer.length % padLength).to.be 0
 
-      # check padded contents
-      diff = paddedLength - length
-      expectedBuffer = new Buffer(diff for i in [0...diff])
-      expect(paddedBuffer.slice(length).isEqual expectedBuffer).to.be true
+        # check padded contents
+        diff = padLength - buffer.length
+        expectedBuffer = new Buffer(diff for i in [0...diff])
+        expect(paddedBuffer.slice(-diff).isEqual expectedBuffer).to.be true
+      
+      it "can handle even blocked buffer", ->
+        buffer = new Buffer('YELLOW SUBMARINE')
+        padLength = 16
+        paddedBuffer = buffer.pkcs7(padLength)
+        # check length
+        expect(paddedBuffer.length % padLength).to.be 0
+
+        # check padded contents
+        expectedBuffer = new Buffer(padLength for i in [0...padLength])
+        expect(paddedBuffer.slice(-padLength).isEqual expectedBuffer).to.be true
 
   describe 'challenge#10', ->
     it "can do decrypt CDC encrypt correctly", (done) ->
@@ -39,36 +50,37 @@ describe 'Matasano Challenge Set#2', ->
         expect(decodedString.match(/freaks/g).length).to.be 1
         done()
 
-    it.only "can do CDC encrypt manually", ->
-      plaintext = "egg sandwhich nopan even longer onee thdis is as realddly dsdflong, why does it work, this is really strnage"
+    describe "buffer#partition", ->
+      describe "no padding", ->
+        it "can handle evenly divisible partition lengths", ->
+          aBuf = new Buffer([1,2,3,4,5,6,7,8,9,10])
+          buffs = aBuf.partition(5)
+          expect(buffs[1].isEqual(new Buffer([6,7,8,9,10]))).to.be true
+
+        it "can handle uneven divisible partition lengths", ->
+          aBuf = new Buffer([1,2,3,4,5,6,7,8,9,10])
+          buffs = aBuf.partition(4)
+          expect(buffs[2].isEqual(new Buffer([9,10]))).to.be true
+
+      describe "pkc7 padded partition", ->
+        it "can handle evenly divisible partition lengths", ->
+          aBuf = new Buffer([1,2,3,4,5,6,7,8,9,10])
+          buffs = aBuf.partition(5, doPkcs7Pad=true)
+          expect(buffs[2].isEqual(new Buffer([5,5,5,5,5]))).to.be true
+
+        it "can handle uneven divisible partition lengths", ->
+          aBuf = new Buffer([1,2,3,4,5,6,7,8,9,10])
+          buffs = aBuf.partition(4, doPkcs7Pad=true)
+          expect(buffs[2].isEqual(new Buffer([9,10,2,2]))).to.be true
+
+    it "can manually do CDC encrypt", ->
       key = 'YELLOW SUBMARINE'
-      pBuffer = new Buffer(plaintext)
       iv = new Buffer(0 for i in [0...16])
-
-      blocks = pBuffer.partition(16, doPkcs7Pad=true)
-      log "original blocks"
-      log blocks
-
-      cipher = crypto.createCipheriv('aes-128-cbc', key, iv)
-      cBuffer = Buffer.concat [cipher.update(pBuffer), cipher.final()]
-      log "expected encrypt result, length: " + cBuffer.length
-      log cBuffer.slice(40)
-
-      encryptedBlocks = []
-      cipher = crypto.createCipheriv('aes-128-ecb', key, new Buffer(0))
-      for block, i in blocks
-        xorResult = block.xorWith(iv)
-        iv = cipher.update(xorResult)
-        # iv = Buffer.concat [cipher.update(xorResult), cipher.final()]
-        encryptedBlocks.push iv
-      # encryptedBlocks.push cipher.final()
-
-      myEncrypt = Buffer.concat encryptedBlocks
-      log "my result, length: " + cBuffer.length
-      log myEncrypt.slice(40)
-
-      cipher = crypto.createDecipheriv('aes-128-cbc', key, (new Buffer(0)).pad(16))
-      theirDecrypt = (Buffer.concat [cipher.update(myEncrypt), cipher.final()]).toString('utf8')
-      log "them decrypting me"
-      log theirDecrypt
-      expect(theirDecrypt).to.be plaintext
+      # log crypto.getCiphers()
+      
+      for i in [1..100]
+        plaintext = ('a' for j in [0...i]).join('')
+        cBuffer = CryptoTools.cbcEncrypt(plaintext, key, iv)
+        cipher = crypto.createDecipheriv('aes-128-cbc', key, iv)
+        openSSLDecrypt = (Buffer.concat [cipher.update(cBuffer), cipher.final()]).toString('utf8')
+        expect(openSSLDecrypt).to.be plaintext
