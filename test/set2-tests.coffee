@@ -85,7 +85,7 @@ describe 'Matasano Challenge Set#2', ->
         openSSLDecrypt = (Buffer.concat [cipher.update(cBuffer), cipher.final()]).toString('utf8')
         expect(openSSLDecrypt).to.be plaintext
 
-  describe.only 'challenge#11', ->
+  describe 'challenge#11', ->
     describe "Buffer@randomBytes", ->
       it "can make random bytes of a given length", ->
         for i in [5..20]
@@ -98,4 +98,20 @@ describe 'Matasano Challenge Set#2', ->
         cBuffer = CryptoTools.encryptionOracle(new Buffer(data))
         result = CryptoTools.detectECBvsCBC(cBuffer)
         log result.method
+        done()
+
+  describe.only 'challenge#12', ->
+    it "can decrypt ecb", (done) ->
+      fs.readFile 'data/11.txt', 'utf8', (err, data) ->
+        return console.log err if err
+        # find block size
+        blockSize = 0
+        for i in [1..32]
+          testString = ("A" for j in [0...i]).join('')
+          cBuffer = CryptoTools.ecbOracle(testString, new Buffer(data))
+          if lastSlice? and lastSlice.isEqual(cBuffer[0...lastSlice.length])
+            blockSize = lastSlice.length
+            break
+          lastSlice = cBuffer[0...i]
+
         done()

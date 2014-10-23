@@ -108,6 +108,21 @@ CryptoTools =
       cBuffer = Buffer.concat [cipher.update(data), cipher.final()]
 
     return cBuffer
+  
+  ecbOracle: (testString, data) ->
+    @key or= Buffer.randomBytes(16)
+    # testString = 'Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK'
+
+    randomLength1 = 5 + Math.floor(5*Math.random())
+    randomLength2 = 5 + Math.floor(5*Math.random())
+    beforeJunk = Buffer.randomBytes(randomLength1)
+    afterJunk = Buffer.randomBytes(randomLength2)
+    data = Buffer.concat [new Buffer(testString), beforeJunk, data, afterJunk]
+
+    cipher = crypto.createCipheriv('aes-128-ecb', @key, new Buffer(0))
+    cBuffer = Buffer.concat [cipher.update(data), cipher.final()]
+
+    return cBuffer
 
   detectECBvsCBC: (data) ->
     mostRepeatedHex = {count: 0}
